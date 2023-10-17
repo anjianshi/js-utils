@@ -60,3 +60,25 @@ export function safeParseFloat(value: string | number, fallback: number) {
   const raw = parseFloat(String(value))
   return isFinite(raw) ? raw : fallback
 }
+
+/**
+ * Return file size for human reading.
+ * From：https://stackoverflow.com/a/14919494
+ *
+ * si: true for radix of 1024；false for radix of 1000（default: false）
+ * dp: how many decimal places to keep（保留几位小数）
+ */
+export function readableSize(bytes: number, si = false, dp = 1) {
+  const thresh = si ? 1000 : 1024
+  if (Math.abs(bytes) < thresh) return bytes.toString() + ' B'
+  const units = si
+    ? ['kB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB']
+    : ['KiB', 'MiB', 'GiB', 'TiB', 'PiB', 'EiB', 'ZiB', 'YiB']
+  let u = -1
+  const r = 10 ** dp
+  do {
+    bytes /= thresh
+    ++u
+  } while (Math.round(Math.abs(bytes) * r) / r >= thresh && u < units.length - 1)
+  return `${bytes.toFixed(dp)} ${units[u]!}`
+}

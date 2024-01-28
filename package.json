@@ -1,6 +1,6 @@
 {
   "name": "@anjianshi/utils",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "Common JavaScript Utils",
   "homepage": "https://github.com/anjianshi/js-utils",
   "bugs": {
@@ -29,15 +29,15 @@
     "lodash": "^4.17.21"
   },
   "devDependencies": {
-    "@anjianshi/presets": "1.3.0",
+    "@anjianshi/presets-eslint-node": "^1.0.3",
+    "@anjianshi/presets-eslint-typescript": "^1.0.3",
+    "@anjianshi/presets-prettier": "^1.0.0",
+    "@anjianshi/presets-typescript": "^1.0.1",
     "@types/debug": "^4.1.9",
     "@types/lodash": "^4.14.199",
     "@types/node": "^20.8.6",
-    "eslint": "^8.51.0",
-    "prettier-not-stubborn": "^3.0.3",
-    "typescript": "^5.2.2",
     "vconsole": "^3.15.1"
   },
   "eslintIgnore": [],
-  "prettier": "@anjianshi/presets/prettierrc"
+  "prettier": "@anjianshi/presets-prettier/prettierrc"
 }

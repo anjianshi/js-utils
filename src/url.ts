@@ -31,7 +31,7 @@ function parseQuery(url: string, options?: { array?: false, strict?: boolean }):
 function parseQuery(url: string, options: { array: true, strict?: boolean }): Record<string, string | string[]> // prettier-ignore
 function parseQuery(
   url: string,
-  options?: { array?: boolean; strict?: boolean },
+  options?: { array?: boolean; strict?: boolean }
 ): Record<string, string | string[]> {
   if (!url) return {}
   const { array = false, strict = false } = options ?? {}
@@ -116,7 +116,7 @@ hash    string     不带 # 号；若 url 已有 hash，会用此值代替
 export function combineUrl(
   origUrl: string,
   search?: Record<string, string | string[]>,
-  hash?: string,
+  hash?: string
 ) {
   search = search ?? {}
   hash = hash ?? ''

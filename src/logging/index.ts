@@ -13,6 +13,15 @@ export enum LogLevel {
   Error = 4,
 }
 
+export const logLevelMap: Record<string, LogLevel> = {
+  debug: LogLevel.Debug,
+  info: LogLevel.Info,
+  warn: LogLevel.Warning,
+  warning: LogLevel.Warning,
+  err: LogLevel.Error,
+  error: LogLevel.Error,
+}
+
 export interface LogInfo {
   logger: string // logger name；有多级 logger 的情况下，这是最初的 logger 名称
   level: LogLevel
@@ -30,11 +39,20 @@ export class Logger {
 
   constructor(
     public name: string = '',
-    public base: Logger | null = null, // 指定上级 logger，当前 logger 记录的日志也会传递给上级
+    public base: Logger | null = null // 指定上级 logger，当前 logger 记录的日志也会传递给上级
   ) {}
 
-  setLevel(level: LogLevel) {
-    this.level = level
+  static getRealLevel(raw: LogLevel | string) {
+    if (typeof raw === 'string') {
+      raw = raw.toLocaleLowerCase()
+      if (logLevelMap[raw] === undefined) throw new Error('Not supported log level: ' + raw)
+      return logLevelMap[raw]!
+    }
+    return raw
+  }
+
+  setLevel(level: LogLevel | string) {
+    this.level = Logger.getRealLevel(level)
   }
 
   addHandler(handler: LogHandler) {
@@ -51,7 +69,8 @@ export class Logger {
     return new (this.constructor as Constructor)(fullname, this) as this
   }
 
-  log(level: LogLevel, args: unknown[]) {
+  log(level: LogLevel | string, args: unknown[]) {
+    level = Logger.getRealLevel(level)
     this.logByInfo({ logger: this.name, level, time: dayjs(), args })
   }
   protected logByInfo(info: LogInfo) {

@@ -44,7 +44,7 @@ export class Logger {
 
   static getRealLevel(raw: LogLevel | string) {
     if (typeof raw === 'string') {
-      raw = raw.toLocaleLowerCase()
+      raw = raw.toLowerCase()
       if (logLevelMap[raw] === undefined) throw new Error('Not supported log level: ' + raw)
       return logLevelMap[raw]!
     }

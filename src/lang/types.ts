@@ -73,6 +73,7 @@ export interface Success<T = void> {
 export interface Failed<ET = string> {
   success: false
   error: ET
+  code?: number | string
 }
 export type MaySuccess<T = void, ET = string> = Success<T> | Failed<ET>
 
@@ -83,25 +84,19 @@ function success<T = void>(data?: T) {
 }
 export { success }
 
-export function failed<ET>(error: ET): Failed<ET> {
-  return { success: false, error }
+export function failed<ET>(error: ET, code?: number | string): Failed<ET> {
+  return { success: false, error, code }
 }
 
 /**
  * 若传入值为 success，格式化其 data；否则原样返回错误
  * 支持传入会返回 MaySuccess 的 Promise
  */
-function formatSuccess<T, ET, FT>(
-  item: MaySuccess<T, ET>,
-  formatter: (data: T) => FT,
-): MaySuccess<FT, ET>
-function formatSuccess<T, ET, FT>(
-  item: Promise<MaySuccess<T, ET>>,
-  formatter: (data: T) => FT,
-): Promise<MaySuccess<FT, ET>>
+function formatSuccess<T, ET, FT>(item: MaySuccess<T, ET>, formatter: (data: T) => FT): MaySuccess<FT, ET> // prettier-ignore
+function formatSuccess<T, ET, FT>(item: Promise<MaySuccess<T, ET>>, formatter: (data: T) => FT): Promise<MaySuccess<FT, ET>> // prettier-ignore
 function formatSuccess<T, ET, FT>(
   item: MaySuccess<T, ET> | Promise<MaySuccess<T, ET>>,
-  formatter: (data: T) => FT,
+  formatter: (data: T) => FT
 ) {
   if ('then' in item) return item.then(finalItem => formatSuccess(finalItem, formatter))
   return item.success ? { ...item, data: formatter(item.data) } : item
@@ -113,10 +108,10 @@ export { formatSuccess }
  * 注意：空字符串和数字 0 也会判定为没有值
  */
 function truthy(
-  value: string | number | boolean | null | undefined,
+  value: string | number | boolean | null | undefined
 ): value is string | number | true
 function truthy<T>(
-  value: T | string | number | boolean | null | undefined,
+  value: T | string | number | boolean | null | undefined
 ): value is T | string | number | true
 function truthy<T>(value: T | string | number | boolean | null | undefined) {
   return value !== null && value !== undefined && value !== '' && value !== 0 && value !== false

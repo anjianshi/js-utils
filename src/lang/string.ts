@@ -32,7 +32,6 @@ export function keywordCompare(keyword: string, target: string) {
  *
  * 以 0 开头是特例，例如 019 和 12 两个字符串，按直觉还是应该 019 在前面，毕竟本质还是字符串排序。
  *
- *
  * "123" "456"             数字排序
  * "123你好" "133我好"     字符串排序
  * "019" "12"              字符串排序
@@ -62,11 +61,11 @@ export function safeParseFloat(value: string | number, fallback: number) {
 }
 
 /**
- * Return file size for human reading.
- * From：https://stackoverflow.com/a/14919494
+ * 返回人类可读的文件尺寸
+ * 来自：https://stackoverflow.com/a/14919494
  *
- * si: true for radix of 1024；false for radix of 1000（default: false）
- * dp: how many decimal places to keep（保留几位小数）
+ * si: true 则使用 1000 进制，否则 1024 进制（默认 false）
+ * dp: 保留几位小数
  */
 export function readableSize(bytes: number, si = false, dp = 1) {
   const thresh = si ? 1000 : 1024

@@ -1,5 +1,6 @@
 /**
  * 通过此模块注册全局变量以便于调试
+ * 变量会注册到 window.app = {} 下
  */
 
 declare global {

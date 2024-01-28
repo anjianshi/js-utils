@@ -128,7 +128,7 @@ export class FileHandler extends LogHandler {
         totalLength += itemString.length
       } else {
         itemStrings.push(
-          itemString.slice(0, this.options.maxLength - totalLength) + ' [too long, sliced]',
+          itemString.slice(0, this.options.maxLength - totalLength) + ' [too long, sliced]'
         )
         break
       }
@@ -179,7 +179,7 @@ export class FileHandler extends LogHandler {
     const { dir, filePrefix } = this.options
     return path.join(
       dir,
-      `${filePrefix ? `${filePrefix}-` : ''}${dayjs().format('YYYY-MM-DD')}.log`,
+      `${filePrefix ? `${filePrefix}-` : ''}${dayjs().format('YYYY-MM-DD')}.log`
     )
   }
 

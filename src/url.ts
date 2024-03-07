@@ -9,47 +9,43 @@
  */
 import isPlainObject from 'lodash/isPlainObject.js'
 
-/*
-从字符串中解析出 query 对象
-
-array:
-- 若开启，支持解析 a[]=1&a[]=2 格式的参数，会解析成一个数组 { a: ['1', '2'] }
-- 否则把 `a[]` 整体当做一个参数名 { 'a[]': '2' }
-
-strict:
-是否开启“严格模式”（默认不开启）。
-在非严格模式下，会做很多兼容处理：
-1. 支持直接传入 query string（a=1&b=2）；严格模式下，则需在开头补充一个 ?（?a=1&b=2）
-2. hash 里的内容也会被解析，以兼容拼接错误的 URL（把 query 拼到了 hash 后面）。
-3. 出现多个 ? 符号时，会把 ? 也当做 & 分隔符（index.html?a=1&b=2?c=3）
-
-小技巧：
-在非严格模式下，如果明确只想解析 hash 或 search 里的内容，可以传入 location.search / hash 而不是传入整个 location.href
-
-此函数不会对 query 值进行 decode，需自定处理
-*/
-function parseQuery(url: string, options?: { array?: false, strict?: boolean }): Record<string, string> // prettier-ignore
-function parseQuery(url: string, options: { array: true, strict?: boolean }): Record<string, string | string[]> // prettier-ignore
+/**
+ * 从 URL 中解析出 query 对象
+ * 注意：不带 ? 号的纯 query 内容需手动加上 ? 再传入。
+ *
+ * [array]
+ * 是否把重复出现的 key 保存为数组（默认不开启）
+ * a=1&a=2 => { a: [1,2] }
+ *
+ * [loose]
+ * 是否开启“宽松模式”（默认不开启）
+ * 1. hash 里的内容也会被解析，以兼容拼接错误的 URL（把 query 拼到了 hash 后面）。
+ * 2. 出现多个 ? 符号时，会把 ? 也当做 & 分隔符（index.html?a=1&b=2?c=3）
+ *
+ * [decode]
+ * 是否对 query 值进行 decode（默认开启）
+ */
+function parseQuery(url: string, options?: { array?: false, loose?: boolean, decode?: boolean }): Record<string, string> // prettier-ignore
+function parseQuery(url: string, options: { array: true, loose?: boolean, decode?: boolean }): Record<string, string | string[]> // prettier-ignore
 function parseQuery(
   url: string,
-  options?: { array?: boolean; strict?: boolean }
+  options?: { array?: boolean; loose?: boolean; decode?: boolean }
 ): Record<string, string | string[]> {
-  if (!url) return {}
-  const { array = false, strict = false } = options ?? {}
+  const { array = false, loose = false, decode = true } = options ?? {}
 
-  const queryString = strict
-    ? (/^[^?#]*\?(.+?)(\?|#|$)/.exec(url) ?? ['', ''])[1] // 排除 hash、重复的 ? 符号
-    : url
+  // 正常状态下，将仅剩 a=1&b=1（即不会再有 ? 和 #）；loose 模型下，可能为 a=1&b=2#c=3?d=4
+  const queryString = (loose ? /(\?|#)(.+)/ : /(\?)(.+?)(#|$)/).exec(url)?.[2] ?? ''
+  if (!queryString) return {}
 
   const query: { [name: string]: string | string[] } = {}
   const reg = /([^#?&]*)=([^#?&]*)/g
   let re = reg.exec(queryString)
   while (re) {
-    const [name, value] = [re[1]!, re[2]!]
-    if (name.endsWith('[]') && array) {
-      const realName = name.slice(0, -2)
-      if (Array.isArray(query[realName])) (query[realName] as string[]).push(value)
-      else query[realName] = [value]
+    const [name, rawValue] = [re[1]!, re[2]!] as [string, string]
+    const value = decode ? safeDecode(rawValue) : rawValue
+    if (array && query[name] !== undefined) {
+      const prev = query[name]!
+      query[name] = Array.isArray(prev) ? [...prev, value] : [prev, value]
     } else {
       query[name] = value
     }
@@ -60,34 +56,34 @@ function parseQuery(
 export { parseQuery }
 
 /**
- * 取 query 中指定参数的值
- * - 参数存在，返回参数值（可能是空字符串）；不存在返回 null
- * - 解析 query 固定基于 parseQuery() 的 { array: false, strict: false } 规则
- * - 和 parseQuery() 一样，url 可以根据需要传 location.href/search/hash
- */
-export function getQueryParam(name: string, url: string): string | null {
-  const query = parseQuery(url)
-  return typeof query[name] === 'string' ? query[name]! : null
-}
-
-/**
  * 把对象合并成 query string。
- * 支持字符串、数值、布尔值（不建议，考虑用 0 和 1 代替），数组会转换成 name[]=value 的格式
+ * - 支持字符串、数值、布尔值、数组。
+ * - 布尔值会替换成 0 和 1。
+ * - 数组会多次赋值：{ a: [1,2,3] } => 'a=1&a=2&a=3'，不支持嵌套数组
+ * - encode 为 true 时会对 value 执行 encodeURIComponent（默认为 true）
  */
 type StringifyVal = string | number | boolean
-export function stringifyQuery(obj: { [key: string]: StringifyVal | StringifyVal[] | undefined }) {
+type StringifyQuery = { [key: string]: StringifyVal | StringifyVal[] | undefined }
+export function stringifyQuery(obj: StringifyQuery, encode = true) {
   if (!isPlainObject(obj)) return ''
   return (
     Object.entries(obj)
       // 过滤值为 undefined 的项目，使其完全不出现在最终的 query 中
       .filter((entry): entry is [string, StringifyVal | StringifyVal[]] => entry[1] !== undefined)
-      .map(([name, value]) => stringifyQueryItem(name, value))
+      .map(([name, value]) => stringifyQueryItem(name, value, encode))
       .join('&')
   )
 }
-function stringifyQueryItem(name: string, value: StringifyVal | StringifyVal[]): string {
+function stringifyQueryItem(
+  name: string,
+  value: StringifyVal | StringifyVal[],
+  encode: boolean
+): string {
   if (Array.isArray(value))
-    return value.map(subValue => stringifyQueryItem(`${name}[]`, subValue)).join('&')
+    return value.map(subValue => stringifyQueryItem(name, subValue, encode)).join('&')
+  if (typeof value === 'boolean') value = value ? '1' : '0'
+  if (typeof value === 'number') value = value.toString()
+  if (encode) value = encodeURIComponent(value)
   return `${name}=${value}`
 }
 
@@ -96,6 +92,7 @@ function stringifyQueryItem(name: string, value: StringifyVal | StringifyVal[]):
  *
  * bare 为 true，则 search 不带 '?'，hash 不带 '#'
  * 否则和 location.search / hash 一样
+ * （默认为 true）
  */
 export function splitUrl(url: string, bare = true): { base: string; search: string; hash: string } {
   let hashIndex = url.indexOf('#')
@@ -114,16 +111,12 @@ export function splitUrl(url: string, bare = true): { base: string; search: stri
 }
 
 /**
- * 把指定 query 和 hash 内容合并到 url 上
+ * 把 query 和 hash 内容合并到 url 上
  *
  * query   object    与现有 search 合并，替换同名项（值为数组的，用新数组代替老的，不会合并数组）
- * hash    string    若 url 已有 hash，会用此值代替。带不带开头的 '?' 皆可。
+ * hash    string    带不带开头的 '#' 皆可。会代替 url 已有的 hash。
  */
-export function combineUrl(
-  origUrl: string,
-  query: Record<string, string | string[]> = {},
-  hash: string = ''
-) {
+export function combineUrl(origUrl: string, query: StringifyQuery = {}, hash: string = '') {
   if (hash.startsWith('#')) hash = hash.slice(1)
 
   // 拆分原 url 的 search、hash

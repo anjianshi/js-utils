@@ -1,22 +1,9 @@
-/**
- * 针对 Node.js 环境定制 logging
- * 注意：使用此模块需要 chalk 依赖
- */
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import chalk from 'chalk'
 import dayjs from 'dayjs'
-import {
-  logger as defaultLogger,
-  type Logger,
-  type LogInfo,
-  LogLevel,
-  LogHandler,
-  formatters,
-} from '../logging/index.js'
-
-export * from '../logging/index.js'
+import { type LogInfo, LogLevel, LogHandler, formatters } from '../../logging/index.js'
 
 /**
  * 向 console 输出日志
@@ -192,11 +179,4 @@ export class FileHandler extends LogHandler {
       if (error) console.error('[logger] write failed: ' + String(error))
     })
   }
-}
-
-/**
- * 预设的初始化行为
- */
-export function initLogger(logger: Logger = defaultLogger) {
-  logger.addHandler(new ConsoleHandler())
 }

@@ -132,6 +132,40 @@ export function combineUrl(origUrl: string, query: StringifyQuery = {}, hash: st
 }
 
 /**
+ * 移除路径中所有非必须的 "/"
+ * 清理后的字符串只有这几种可能的格式：''、'abc'、'abc/def'
+ * 例如 /abc/def 和 abc/def/ 都会变成 abc/def
+ *
+ * 注意：此操作不会统一大小写，因此不保证处理后两个字符串在代码层面全等（a === b）
+ */
+export function clearSlash(path: string) {
+  if (path.startsWith('/')) path = path.slice(1)
+  if (path.endsWith('/')) path = path.slice(0, -1)
+  path = path.replace(/\/+/g, '/')
+  return path
+}
+
+/**
+ * 合并几段路径，保证合并处只有一个斜杠
+ */
+export function joinPath(...nodes: string[]) {
+  // - node 为 '' 时忽略 node
+  // - path 可能的格式：'' 'a' 'a/' ‘/a/'
+  //   - path 为 ''，则 node 开头 '/' 保持原样
+  //   - 否则，根据 path 结尾有没有 '/'，决定 node 开头带不带 '/'
+  // - node 开头、结尾若有多个 '/' 均替换成单个
+  return nodes.reduce((path, node) => {
+    if (!node) return path
+    type Matched = RegExpExecArray & { 1: string; 2: string; 3: string }
+    const [, origPrefix, content, origSuffix] = /^(\/*)(.*?)(\/*)$/.exec(node)! as Matched
+    const prefix = (path === '' ? !!origPrefix : !path.endsWith('/')) ? '/' : ''
+    const suffix = origSuffix ? '/' : ''
+    const result = `${path}${prefix}${content}${suffix}`
+    return result
+  }, '')
+}
+
+/**
  * decodeURIComponent() 对于不规范编码的字符串可能会报错（例如字符串里出现了“%”）
  * 用此函数代替可避免此问题
  */

@@ -47,10 +47,10 @@
   dependencies:
     prettier-not-stubborn "^3.3.0-dev"
 
-"@anjianshi/presets-typescript@^1.0.2":
-  version "1.0.2"
-  resolved "https://registry.npmjs.org/@anjianshi/presets-typescript/-/presets-typescript-1.0.2.tgz#d54e651323535e0d728fee744aeb51c3bb4b5719"
-  integrity sha512-AlY2lu3JKFGblQnEjYGf+6U+5/YJymWj1ewuF2w6E5XmM2+INvh7m1542bAi73KBW5FhGHBChl4F8skCn5Ojyg==
+"@anjianshi/presets-typescript@^1.0.3":
+  version "1.0.3"
+  resolved "https://registry.npmjs.org/@anjianshi/presets-typescript/-/presets-typescript-1.0.3.tgz#2db9b2c6db82829c7517ff0ff27f40245c6e6d54"
+  integrity sha512-aMoD+5M+JYk8D2G+hzEn4E1IXCHxKmGfoGLjPGUd6rg4nHqea5wQNs0Qhab2y8dy0BZ/4Ws2tOmD+vZ9IEEbuw==
   dependencies:
     typescript "^5.4.2"
 
